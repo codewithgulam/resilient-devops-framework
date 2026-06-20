@@ -1,132 +1,171 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="refresh" content="5">
-    <title>Resilient DevOps Dashboard</title>
+<meta charset="UTF-8">
+<meta http-equiv="refresh" content="5">
+<title>Resilient DevOps Dashboard</title>
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f7fb;
-            margin: 0;
-            padding: 20px;
-        }
+<style>
 
-        h1 {
-            text-align: center;
-            color: #222;
-        }
+body{
+    font-family:Arial,sans-serif;
+    background:#121212;
+    color:white;
+    margin:0;
+    padding:20px;
+}
 
-        .container {
-            max-width: 1100px;
-            margin: auto;
-        }
+.container{
+    max-width:1200px;
+    margin:auto;
+}
 
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            margin-top: 30px;
-        }
+h1{
+    text-align:center;
+    margin-bottom:30px;
+}
 
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
+.cards{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:20px;
+}
 
-        .label {
-            font-size: 14px;
-            color: #666;
-        }
+.card{
+    background:#1f1f1f;
+    border-radius:12px;
+    padding:20px;
+    box-shadow:0 4px 10px rgba(0,0,0,.3);
+}
 
-        .value {
-            font-size: 24px;
-            font-weight: bold;
-            margin-top: 10px;
-        }
+.label{
+    color:#aaa;
+    font-size:14px;
+}
 
-        .healthy {
-            color: green;
-        }
+.value{
+    font-size:24px;
+    font-weight:bold;
+    margin-top:10px;
+}
 
-        .unhealthy {
-            color: red;
-        }
+.healthy{
+    color:#00d26a;
+}
 
-        .event-box {
-            margin-top: 30px;
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
+.unhealthy{
+    color:#ff4d4d;
+}
 
-        .event-title {
-            font-size: 22px;
-            margin-bottom: 20px;
-            font-weight: bold;
-        }
+.event-box{
+    margin-top:30px;
+    background:#1f1f1f;
+    padding:20px;
+    border-radius:12px;
+}
 
-        .event-item {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-            font-size: 15px;
-        }
+table{
+    width:100%;
+    border-collapse:collapse;
+}
 
-        .event-item:last-child {
-            border-bottom: none;
-        }
-    </style>
+th,td{
+    padding:12px;
+    border-bottom:1px solid #333;
+    text-align:left;
+}
+
+th{
+    background:#2a2a2a;
+}
+
+.footer{
+    margin-top:20px;
+    text-align:center;
+    color:#aaa;
+}
+
+</style>
 </head>
+
 <body>
 
-    <div class="container">
-        <h1>Resilient DevOps Monitoring Dashboard</h1>
+<div class="container">
 
-        <div class="cards">
+<h1>🚀 Resilient DevOps Deployment Dashboard</h1>
 
-            <div class="card">
-                <div class="label">Application Status</div>
-                <div class="value {% if status.application_status == 'Healthy' %}healthy{% else %}unhealthy{% endif %}">
-                    {{ status.application_status }}
-                </div>
-            </div>
+<div class="cards">
 
-            <div class="card">
-                <div class="label">Container Status</div>
-                <div class="value">{{ status.container_status }}</div>
-            </div>
+<div class="card">
+<div class="label">Application Status</div>
+<div class="value {% if status.application_status == 'Healthy' %}healthy{% else %}unhealthy{% endif %}">
+{{ status.application_status }}
+</div>
+</div>
 
-            <div class="card">
-                <div class="label">Restart Attempts</div>
-                <div class="value">{{ status.restart_attempts }}</div>
-            </div>
+<div class="card">
+<div class="label">Container Status</div>
+<div class="value">{{ status.container_status }}</div>
+</div>
 
-            <div class="card">
-                <div class="label">Rollback Triggered</div>
-                <div class="value">{{ status.rollback_triggered }}</div>
-            </div>
+<div class="card">
+<div class="label">Current Version</div>
+<div class="value">{{ status.current_version }}</div>
+</div>
 
-            <div class="card">
-                <div class="label">Environment</div>
-                <div class="value">{{ status.environment }}</div>
-            </div>
+<div class="card">
+<div class="label">Recovery Stats</div>
+<div class="value">
+SH: {{ status.self_heal_count }} |
+RB: {{ status.rollback_count }}
+</div>
+</div>
 
-        </div>
+<div class="card">
+<div class="label">Restart Attempts</div>
+<div class="value">{{ status.restart_attempts }}</div>
+</div>
 
-        <div class="event-box">
-            <div class="event-title">System Event Timeline</div>
+<div class="card">
+<div class="label">Last Health Check</div>
+<div class="value">{{ status.last_health_check }}</div>
+</div>
 
-            {% for event in status.events %}
-                <div class="event-item">{{ event }}</div>
-            {% endfor %}
-        </div>
+</div>
 
-    </div>
+<div class="event-box">
+
+<h2>Recent Recovery Events</h2>
+
+<table>
+
+<thead>
+<tr>
+<th>Event Log</th>
+</tr>
+</thead>
+
+<tbody>
+{% for event in status.events %}
+<tr>
+<td>{{ event }}</td>
+</tr>
+{% endfor %}
+</tbody>
+
+</table>
+
+</div>
+
+<div class="footer">
+
+Monitoring Active |
+Environment: {{ status.environment }} |
+Rollback Triggered: {{ status.rollback_triggered }}
+
+</div>
+
+</div>
 
 </body>
 </html>

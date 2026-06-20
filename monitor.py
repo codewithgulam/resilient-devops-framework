@@ -4,7 +4,7 @@ import time
 import json
 from datetime import datetime
 
-URL = "http://localhost:8000/health"
+URL = "http://127.0.0.1:8001/health"
 CONTAINER_NAME = "resilient-container"
 STABLE_IMAGE = "resilient-app:v1"
 STATUS_FILE = "status.json"
@@ -55,6 +55,10 @@ def restart_container():
 
     subprocess.run(["docker", "restart", CONTAINER_NAME])
 
+    log_event("Container Restart Successful")
+
+    time.sleep(15)
+
 
 def rollback():
     print("Restart failed repeatedly. Rolling back...")
@@ -69,7 +73,7 @@ def rollback():
         "docker", "run",
         "-d",
         "--name", CONTAINER_NAME,
-        "-p", "8000:8000",
+        "-p", "8001:8000",
         STABLE_IMAGE
     ])
 
@@ -79,18 +83,44 @@ def rollback():
 
 while True:
     try:
-        response = requests.get(URL, timeout=5)
+        response = requests.get(URL, timeout=15)
 
         if response.status_code == 200:
+            restart_attempts = 0
+            failure_count = 0
+
             print("Health check passed")
-            update_status("Healthy", "Running", restart_attempts, "No")
+
+            update_status(
+                "Healthy",
+                "Running",
+                restart_attempts,
+                "No"
+            )
+
         else:
+            failure_count += 1
+
+            print(f"Failure Count: {failure_count}")
+
+            if failure_count >= 3:
+                restart_attempts += 1
+                restart_container()
+                failure_count = 0
+
+    except Exception as e:
+
+        print("ERROR:", e)
+
+        failure_count += 1
+
+        print(f"Failure Count: {failure_count}")
+        log_event(f"Health Check Failure Detected ({failure_count})")
+
+        if failure_count >= 3:
             restart_attempts += 1
             restart_container()
-
-    except Exception:
-        restart_attempts += 1
-        restart_container()
+            failure_count = 0
 
     if restart_attempts >= MAX_RESTARTS:
         rollback()
