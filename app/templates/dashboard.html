@@ -84,6 +84,23 @@ th{
     text-align:center;
     color:#aaa;
 }
+table td{
+    padding:14px 18px;
+    border-bottom:1px solid #3b3b3b;
+    color:#fff;
+    font-size:17px;
+}
+
+.event-time{
+    color:#00d084;
+    font-weight:700;
+    margin-right:12px;
+    font-family:monospace;
+}
+
+.event-message{
+    color:#f1f1f1;
+}
 
 </style>
 </head>
@@ -116,8 +133,8 @@ th{
 <div class="card">
 <div class="label">Recovery Stats</div>
 <div class="value">
-SH: {{ status.self_heal_count }} |
-RB: {{ status.rollback_count }}
+Self Healing: {{ status.self_heal_count }} <br>
+Roll Back: {{ status.rollback_count }}
 </div>
 </div>
 
@@ -135,34 +152,39 @@ RB: {{ status.rollback_count }}
 
 <div class="event-box">
 
-<h2>Recent Recovery Events</h2>
 
 <table>
 
-<thead>
-<tr>
-<th>Event Log</th>
-</tr>
-</thead>
+    <thead>
+        <tr>
+            <th>Recent Recovery Events</th>
+        </tr>
+    </thead>
 
-<tbody>
-{% for event in status.events %}
-<tr>
-<td>{{ event }}</td>
-</tr>
-{% endfor %}
-</tbody>
+    <tbody>
+        {% for event in status.events %}
+        <tr>
+            <td>
+                <span class="event-time">
+                    {{ event|slice:":10" }}
+                </span>
+
+                <span class="event-message">
+                    {{ event|slice:"10:" }}
+                </span>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
 
 </table>
 
 </div>
 
 <div class="footer">
-
-Monitoring Active |
-Environment: {{ status.environment }} |
-Rollback Triggered: {{ status.rollback_triggered }}
-
+    🟢 <strong>Monitoring Active</strong> &nbsp; | &nbsp;
+    🐳 <strong>Environment:</strong> {{ status.environment }} &nbsp; | &nbsp;
+    🔄 <strong>Rollback:</strong> {{ status.rollback_triggered }}
 </div>
 
 </div>

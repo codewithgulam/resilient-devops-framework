@@ -11,7 +11,9 @@ STATUS_FILE = "status.json"
 
 restart_attempts = 0
 MAX_RESTARTS = 2
-
+failure_count = 0
+self_heal_count = 0
+rollback_count=0
 
 def log_event(message):
     try:
@@ -35,7 +37,7 @@ def update_status(app_status, container_status, attempts, rollback):
         with open(STATUS_FILE, "r") as file:
             data = json.load(file)
     except:
-        data = {"events": []}
+        data = {}
 
     data["application_status"] = app_status
     data["container_status"] = container_status
@@ -43,10 +45,16 @@ def update_status(app_status, container_status, attempts, rollback):
     data["rollback_triggered"] = rollback
     data["environment"] = "Local Docker"
 
+    # Preserve existing values
+    data.setdefault("self_heal_count", 0)
+    data.setdefault("rollback_count", 0)
+    data.setdefault("last_event", "")
+    data.setdefault("last_health_check", "")
+    data.setdefault("events", [])
+
     with open(STATUS_FILE, "w") as file:
         json.dump(data, file, indent=4)
-
-
+        
 def restart_container():
     print("Application unhealthy. Restarting container...")
 
@@ -54,6 +62,19 @@ def restart_container():
     log_event(f"Restart attempt {restart_attempts}")
 
     subprocess.run(["docker", "restart", CONTAINER_NAME])
+
+    try:
+        with open(STATUS_FILE, "r") as file:
+            data = json.load(file)
+
+        data["self_heal_count"] = data.get("self_heal_count", 0) + 1
+        data["last_event"] = "Container Restart Successful"
+
+        with open(STATUS_FILE, "w") as file:
+            json.dump(data, file, indent=4)
+
+    except Exception as e:
+        print("Error updating self-heal count:", e)
 
     log_event("Container Restart Successful")
 
@@ -63,8 +84,27 @@ def restart_container():
 def rollback():
     print("Restart failed repeatedly. Rolling back...")
 
-    update_status("Unhealthy", "Rollback in Progress", restart_attempts, "Yes")
+    update_status(
+        "Unhealthy",
+        "Rollback in Progress",
+        restart_attempts,
+        "Yes"
+    )
+
     log_event("Rollback triggered")
+
+    try:
+        with open(STATUS_FILE, "r") as file:
+            data = json.load(file)
+
+        data["rollback_count"] = data.get("rollback_count", 0) + 1
+        data["last_event"] = "Rollback Triggered"
+
+        with open(STATUS_FILE, "w") as file:
+            json.dump(data, file, indent=4)
+
+    except Exception as e:
+        print("Error updating rollback count:", e)
 
     subprocess.run(["docker", "stop", CONTAINER_NAME])
     subprocess.run(["docker", "rm", CONTAINER_NAME])
@@ -78,6 +118,7 @@ def rollback():
     ])
 
     update_status("Healthy", "Running", 0, "Yes")
+
     log_event("Stable version restored")
 
 
@@ -90,6 +131,19 @@ while True:
             failure_count = 0
 
             print("Health check passed")
+
+            try:
+                with open(STATUS_FILE, "r") as file:
+                    data = json.load(file)
+
+                data["last_health_check"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                data["last_event"] = "Health Check Passed"
+
+                with open(STATUS_FILE, "w") as file:
+                    json.dump(data, file, indent=4)
+
+            except Exception as e:
+                print("Error updating health check:", e)
 
             update_status(
                 "Healthy",
@@ -115,7 +169,10 @@ while True:
         failure_count += 1
 
         print(f"Failure Count: {failure_count}")
-        log_event(f"Health Check Failure Detected ({failure_count})")
+
+        log_event(
+            f"Health Check Failure Detected ({failure_count})"
+        )
 
         if failure_count >= 3:
             restart_attempts += 1

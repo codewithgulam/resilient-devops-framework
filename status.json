@@ -4,20 +4,9 @@
     "restart_attempts": 0,
     "rollback_triggered": "No",
     "environment": "Local Docker",
-    "current_version": "resilient-app:v1",
-    "self_heal_count": 3,
-    "rollback_count": 2,
-    "last_health_check": "2026-06-20 15:30:00",
-    "events": [
-        "[12:06:24] Health Check Failure Detected (1)",
-        "[12:05:44] Container Restart Successful",
-        "[12:05:43] Restart attempt 1",
-        "[12:05:43] Health Check Failure Detected (3)",
-        "[12:05:31] Health Check Failure Detected (2)",
-        "[12:05:19] Health Check Failure Detected (1)",
-        "[11:56:10] Restart attempt 1",
-        "[10:57:25] Stable version restored",
-        "[10:57:22] Rollback triggered",
-        "[10:57:06] Restart attempt 2"
-    ]
+    "self_heal_count": 0,
+    "rollback_count": 0,
+    "last_event": "Health Check Passed",
+    "last_health_check": "2026-06-29 22:17:14",
+    "events": []
 }
