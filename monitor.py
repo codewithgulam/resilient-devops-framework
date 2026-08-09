@@ -4,8 +4,8 @@ import time
 import json
 from datetime import datetime
 
-URL = "http://127.0.0.1:8001/health"
-CONTAINER_NAME = "resilient-container"
+URL = "http://127.0.0.1:8000/health/"
+CONTAINER_NAME = "resilient-container-v2"
 STABLE_IMAGE = "resilient-app:v1"
 STATUS_FILE = "status.json"
 
@@ -43,7 +43,7 @@ def update_status(app_status, container_status, attempts, rollback):
     data["container_status"] = container_status
     data["restart_attempts"] = attempts
     data["rollback_triggered"] = rollback
-    data["environment"] = "Local Docker"
+    data["environment"] = "GCP Compute Engine"
 
     # Preserve existing values
     data.setdefault("self_heal_count", 0)
@@ -112,8 +112,8 @@ def rollback():
     subprocess.run([
         "docker", "run",
         "-d",
-        "--name", CONTAINER_NAME,
-        "-p", "8001:8000",
+        "--name", "resilient-container-v1",
+        "-p", "8000:8000",
         STABLE_IMAGE
     ])
 
@@ -149,7 +149,7 @@ while True:
                 "Healthy",
                 "Running",
                 restart_attempts,
-                "No"
+                data.get("rollback_triggered", "No")
             )
 
         else:

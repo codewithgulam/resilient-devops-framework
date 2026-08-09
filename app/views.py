@@ -5,7 +5,7 @@ import os
 
 
 def health(request):
-    return JsonResponse({"status": "healthy"})
+    return JsonResponse({"status": "unhealthy"}, status=500)
 
 
 def dashboard(request):
