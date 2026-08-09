@@ -1,4 +1,4 @@
-name: Docker Build Check
+name: Docker Build and Deploy
 
 on:
   push:
@@ -16,3 +16,21 @@ jobs:
 
       - name: Build Docker Image
         run: docker build -t resilient-app:test .
+
+  deploy:
+    needs: docker-build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to GCP VM
+        env:
+          GCP_VM_HOST: ${{ secrets.GCP_VM_HOST }}
+          GCP_VM_USER: ${{ secrets.GCP_VM_USER }}
+          GCP_VM_SSH_KEY: ${{ secrets.GCP_VM_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$GCP_VM_SSH_KEY" > ~/.ssh/github_actions_deploy
+          chmod 600 ~/.ssh/github_actions_deploy
+          ssh-keyscan -H "$GCP_VM_HOST" >> ~/.ssh/known_hosts
+
+          ssh -i ~/.ssh/github_actions_deploy "$GCP_VM_USER@$GCP_VM_HOST"             'cd ~/resilient-devops-framework && ./deploy.sh'
