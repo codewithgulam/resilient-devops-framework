@@ -5,7 +5,7 @@ import json
 from datetime import datetime
 
 URL = "http://127.0.0.1:8000/health/"
-CONTAINER_NAME = "resilient-container-v2"
+ACTIVE_CONTAINER = "resilient-container-v2"
 STABLE_IMAGE = "resilient-app:v1"
 STATUS_FILE = "status.json"
 
@@ -56,12 +56,18 @@ def update_status(app_status, container_status, attempts, rollback):
         json.dump(data, file, indent=4)
         
 def restart_container():
+    global ACTIVE_CONTAINER
     print("Application unhealthy. Restarting container...")
 
     update_status("Unhealthy", "Restarting", restart_attempts, "No")
     log_event(f"Restart attempt {restart_attempts}")
 
-    subprocess.run(["docker", "restart", CONTAINER_NAME])
+    result = subprocess.run(["docker", "restart", ACTIVE_CONTAINER])
+
+    if result.returncode != 0:
+        print("Container restart failed")
+        log_event("Container Restart Failed")
+        return
 
     try:
         with open(STATUS_FILE, "r") as file:
@@ -82,6 +88,7 @@ def restart_container():
 
 
 def rollback():
+    global ACTIVE_CONTAINER
     print("Restart failed repeatedly. Rolling back...")
 
     update_status(
@@ -106,8 +113,8 @@ def rollback():
     except Exception as e:
         print("Error updating rollback count:", e)
 
-    subprocess.run(["docker", "stop", CONTAINER_NAME])
-    subprocess.run(["docker", "rm", CONTAINER_NAME])
+    subprocess.run(["docker", "stop", ACTIVE_CONTAINER])
+    subprocess.run(["docker", "rm", ACTIVE_CONTAINER])
 
     subprocess.run([
         "docker", "run",
@@ -116,6 +123,8 @@ def rollback():
         "-p", "8000:8000",
         STABLE_IMAGE
     ])
+
+    ACTIVE_CONTAINER = "resilient-container-v1"
 
     update_status("Healthy", "Running", 0, "Yes")
 
